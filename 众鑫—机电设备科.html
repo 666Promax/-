@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>材料库存+维保管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 4px;
+        }
+        .tab-btn.active {
+            background-color: #2f54eb;
+            color: white;
+            border-color: #2f54eb;
+        }
+        .page {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .page.active {
+            display: block;
+        }
+        .input-item {
+            margin-bottom: 15px;
+        }
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+        .input-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea.input-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .btn-primary {
+            background-color: #2f54eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            margin-bottom: 10px;
+        }
+        .warning-card {
+            border-left: 4px solid #f5222d;
+        }
+        .card-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .card-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .card-remark {
+            font-size: 12px;
+            color: #999;
+        }
+        .img-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .img-item {
+            width: 100px;
+            height: 100px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .upload-btn {
+            border: 1px dashed #ddd;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        .empty-tip {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标签页切换 -->
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchPage('home')">首页</button>
+        <button class="tab-btn" onclick="switchPage('material-add')">添加材料</button>
+        <button class="tab-btn" onclick="switchPage('material-list')">材料列表</button>
+        <button class="tab-btn" onclick="switchPage('maintain-add')">添加维保记录</button>
+        <button class="tab-btn" onclick="switchPage('maintain-month')">月度汇总</button>
+        <button class="tab-btn" onclick="switchPage('maintain-year')">年度汇总</button>
+    </div>
+
+    <!-- 首页 -->
+    <div id="home" class="page active">
+        <h2>首页</h2>
+        <div id="warning-container" style="margin: 20px 0;"></div>
+        <div class="card" onclick="switchPage('material-add')">
+            <div class="card-title">添加新材料</div>
+            <div class="card-desc">录入材料名称、领用信息、库存阈值</div>
+        </div>
+        <div class="card" onclick="switchPage('material-list')">
+            <div class="card-title">材料库存列表</div>
+            <div class="card-desc">查看所有材料，编辑库存，查看预警</div>
+        </div>
+        <div class="card" onclick="switchPage('maintain-add')">
+            <div class="card-title">添加维保记录</div>
+            <div class="card-desc">记录每日检查维修内容，上传现场照片</div>
+        </div>
+        <div class="card" onclick="switchPage('maintain-month')">
+            <div class="card-title">月度维保汇总</div>
+            <div class="card-desc">查看当月所有检查维修记录</div>
+        </div>
+        <div class="card" onclick="switchPage('maintain-year')">
+            <div class="card-title">年度维保汇总</div>
+            <div class="card-desc">查看当年所有检查维修记录</div>
+        </div>
+    </div>
+
+    <!-- 添加材料 -->
+    <div id="material-add" class="page">
+        <h2>添加新材料</h2>
+        <div class="input-item">
+            <label class="input-label">材料名称 *</label>
+            <input type="text" class="input-control" id="material-name" placeholder="请输入材料名称">
+        </div>
+        <div class="input-item">
+            <label class="input-label">领用数量 *</label>
+            <input type="number" min="0" class="input-control" id="material-use-num" placeholder="请输入领用数量">
+        </div>
+        <div class="input-item">
+            <label class="input-label">领用时间 *</label>
+            <input type="date" class="input-control" id="material-use-time">
+        </div>
+        <div class="input-item">
+            <label class="input-label">剩余数量 *</label>
+            <input type="number" min="0" class="input-control" id="material-remaining" placeholder="请输入剩余数量">
+        </div>
+        <div class="input-item">
+            <label class="input-label">最低库存阈值 *</label>
+            <input type="number" min="0" class="input-control" id="material-min" placeholder="低于此数量触发预警">
+        </div>
+        <div class="input-item">
+            <label class="input-label">备注</label>
+            <textarea class="input-control" id="material-remark" placeholder="请输入备注信息（可选）"></textarea>
+        </div>
+        <button class="btn-primary" onclick="saveMaterial()">提交</button>
+    </div>
+
+    <!-- 材料列表 -->
+    <div id="material-list" class="page">
+        <h2>材料库存列表</h2>
+        <div id="material-list-container" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- 添加维保记录 -->
+    <div id="maintain-add" class="page">
+        <h2>添加维保记录</h2>
+        <div class="input-item">
+            <label class="input-label">检查/维修内容 *</label>
+            <textarea class="input-control" id="maintain-content" placeholder="请输入具体检查维修内容"></textarea>
+        </div>
+        <div class="input-item">
+            <label class="input-label">检查日期 *</label>
+            <input type="date" class="input-control" id="maintain-date">
+        </div>
+        <div class="input-item">
+            <label class="input-label">现场照片（可选）</label>
+            <div class="upload-btn" onclick="document.getElementById('file-upload').click()">
+                点击上传照片（可拍照/选相册）
+            </div>
+            <input type="file" id="file-upload" accept="image/*" multiple style="display: none;" onchange="previewImages(this)">
+            <div class="img-preview" id="img-preview-container"></div>
+        </div>
+        <div class="input-item">
+            <label class="input-label">备注</label>
+            <textarea class="input-control" id="maintain-remark" placeholder="请输入备注信息（可选）"></textarea>
+        </div>
+        <button class="btn-primary" onclick="saveMaintain()">提交记录</button>
+    </div>
+
+    <!-- 月度汇总 -->
+    <div id="maintain-month" class="page">
+        <h2 id="month-title">月度维保汇总</h2>
+        <div id="month-list-container" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- 年度汇总 -->
+    <div id="maintain-year" class="page">
+        <h2 id="year-title">年度维保汇总</h2>
+        <div id="year-list-container" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        // 全局变量
+        let materialList = JSON.parse(localStorage.getItem('materialList')) || [];
+        let maintainList = JSON.parse(localStorage.getItem('maintainList')) || [];
+        let previewImagesList = [];
+
+        // 切换页面
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            event.target.classList.add('active');
+            
+            // 刷新数据
+            if(pageId === 'home') renderWarning();
+            if(pageId === 'material-list') renderMaterialList();
+            if(pageId === 'maintain-month') renderMonthList();
+            if(pageId === 'maintain-year') renderYearList();
+        }
+
+        // 渲染库存预警
+        function renderWarning() {
+            const container = document.getElementById('warning-container');
+            const warningList = materialList.filter(item => item.remaining <= item.min);
+            if(warningList.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无库存预警</div>';
+                return;
+            }
+            let html = '';
+            warningList.forEach(item => {
+                html += `
+                <div class="card warning-card">
+                    <div class="card-title" style="color: #f5222d;">⚠️ 库存预警：${item.name}</div>
+                    <div class="card-desc">剩余：${item.remaining} | 阈值：${item.min}</div>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // 保存材料
+        function saveMaterial() {
+            const name = document.getElementById('material-name').value.trim();
+            const useNum = document.getElementById('material-use-num').value.trim();
+            const useTime = document.getElementById('material-use-time').value;
+            const remaining = document.getElementById('material-remaining').value.trim();
+            const min = document.getElementById('material-min').value.trim();
+            const remark = document.getElementById('material-remark').value.trim();
+
+            if(!name || !useNum || !useTime || !remaining || !min) {
+                alert('带*项为必填项！');
+                return;
+            }
+
+            const newMaterial = {
+                id: Date.now(),
+                name,
+                useNum: Number(useNum),
+                useTime,
+                remaining: Number(remaining),
+                min: Number(min),
+                remark
+            };
+
+            materialList.push(newMaterial);
+            localStorage.setItem('materialList', JSON.stringify(materialList));
+            alert('添加成功！');
+            // 清空表单
+            document.getElementById('material-name').value = '';
+            document.getElementById('material-use-num').value = '';
+            document.getElementById('material-use-time').value = '';
+            document.getElementById('material-remaining').value = '';
+            document.getElementById('material-min').value = '';
+            document.getElementById('material-remark').value = '';
+            switchPage('material-list');
+        }
+
+        // 渲染材料列表
+        function renderMaterialList() {
+            const container = document.getElementById('material-list-container');
+            if(materialList.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无材料数据</div>';
+                return;
+            }
+            let html = '';
+            materialList.forEach(item => {
+                const isWarning = item.remaining <= item.min;
+                html += `
+                <div class="card ${isWarning ? 'warning-card' : ''}">
+                    <div class="card-title">${item.name}</div>
+                    <div class="card-desc">领用数量：${item.useNum} | 领用时间：${item.useTime}</div>
+                    <div class="card-desc">剩余数量：<span style="color: ${isWarning ? '#f5222d' : '#2f54eb'}">${item.remaining}</span> | 阈值：${item.min}</div>
+                    <div class="card-remark">备注：${item.remark || '无'}</div>
+                    <button style="margin-top: 10px; padding: 5px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" onclick="editMaterial(${item.id})">编辑</button>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // 编辑材料
+        function editMaterial(id) {
+            const material = materialList.find(item => item.id === id);
+            if(!material) return;
+            const newRemaining = prompt('请输入新的剩余数量', material.remaining);
+            if(newRemaining === null || isNaN(newRemaining) || Number(newRemaining) < 0) {
+                alert('请输入有效的非负数字！');
+                return;
+            }
+            material.remaining = Number(newRemaining);
+            localStorage.setItem('materialList', JSON.stringify(materialList));
+            renderMaterialList();
+            renderWarning();
+        }
+
+        // 预览图片
+        function previewImages(input) {
+            const files = input.files;
+            if(!files.length) return;
+            previewImagesList = [];
+            const container = document.getElementById('img-preview-container');
+            container.innerHTML = '';
+            for(let i=0; i<files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImagesList.push(e.target.result);
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-item';
+                    container.appendChild(img);
+                }
+                reader.readAsDataURL(files[i]);
+            }
+        }
+
+        // 保存维保记录
+        function saveMaintain() {
+            const content = document.getElementById('maintain-content').value.trim();
+            const date = document.getElementById('maintain-date').value;
+            const remark = document.getElementById('maintain-remark').value.trim();
+
+            if(!content || !date) {
+                alert('带*项为必填项！');
+                return;
+            }
+
+            const newMaintain = {
+                id: Date.now(),
+                content,
+                date,
+                images: previewImagesList,
+                remark
+            };
+
+            maintainList.push(newMaintain);
+            localStorage.setItem('maintainList', JSON.stringify(maintainList));
+            alert('提交成功！');
+            // 清空表单
+            document.getElementById('maintain-content').value = '';
+            document.getElementById('maintain-date').value = '';
+            document.getElementById('maintain-remark').value = '';
+            document.getElementById('img-preview-container').innerHTML = '';
+            previewImagesList = [];
+            document.getElementById('file-upload').value = '';
+            switchPage('maintain-month');
+        }
+
+        // 渲染月度汇总
+        function renderMonthList() {
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}`;
+            document.getElementById('month-title').innerText = `${currentMonth} 月度维保汇总`;
+            const container = document.getElementById('month-list-container');
+            const monthList = maintainList.filter(item => item.date.startsWith(currentMonth));
+            if(monthList.length === 0) {
+                container.innerHTML = '<div class="empty-tip">本月暂无维保记录</div>';
+                return;
+            }
+            let html = '';
+            monthList.forEach(item => {
+                html += `
+                <div class="card">
+                    <div class="card-title">📅 ${item.date}</div>
+                    <div class="card-desc">${item.content}</div>
+                    ${item.images.length > 0 ? `
+                    <div class="img-preview" style="margin-top: 10px;">
+                        ${item.images.map(img => `<img src="${img}" class="img-item">`).join('')}
+                    </div>
+                    ` : ''}
+                    <div class="card-remark" style="margin-top: 5px;">备注：${item.remark || '无'}</div>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // 渲染年度汇总
+        function renderYearList() {
+            const now = new Date();
+            const currentYear = now.getFullYear().toString();
+            document.getElementById('year-title').innerText = `${currentYear} 年度维保汇总`;
+            const container = document.getElementById('year-list-container');
+            const yearList = maintainList.filter(item => item.date.startsWith(currentYear));
+            if(yearList.length === 0) {
+                container.innerHTML = '<div class="empty-tip">本年暂无维保记录</div>';
+                return;
+            }
+            // 按月份分组
+            const groupByMonth = {};
+            yearList.forEach(item => {
+                const month = item.date.substring(0, 7);
+                if(!groupByMonth[month]) groupByMonth[month] = [];
+                groupByMonth[month].push(item);
+            });
+            let html = '';
+            for(const month in groupByMonth) {
+                html += `<h3 style="margin: 15px 0 5px;">${month}</h3>`;
+                groupByMonth[month].forEach(item => {
+                    html += `
+                    <div class="card">
+                        <div class="card-title">📅 ${item.date}</div>
+                        <div class="card-desc">${item.content}</div>
+                        <div class="card-remark">备注：${item.remark || '无'}</div>
+                    </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+        }
+
+        // 初始化
+        window.onload = function() {
+            renderWarning();
+            document.getElementById('material-use-time').value = new Date().toISOString().split('T')[0];
+            document.getElementById('maintain-date').value = new Date().toISOString().split('T')[0];
+        }
+    </script>
+</body>
+</html>
